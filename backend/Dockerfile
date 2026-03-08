@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # so npm install only re-runs when dependencies change
-COPY package.json package-lock.json ./
+COPY package.json ./
 RUN npm install
 
 # Copy source after deps are installed
