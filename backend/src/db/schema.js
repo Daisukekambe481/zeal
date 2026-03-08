@@ -1,63 +1,54 @@
-/**
- * @typedef {Object} User
- * @property {number} id
- * @property {string} email
- * @property {string} password_hash
- * @property {string|null} full_name
- * @property {string|null} avatar_url
- * @property {boolean} is_verified
- * @property {string|null} verification_token
- * @property {Date|null} token_expiry
- * @property {string|null} refresh_token
- * @property {Date|null} last_login
- * @property {Date} created_at
- * @property {Date} updated_at
- */
+import { pgTable, serial, varchar, text, boolean, timestamp, integer } from 'drizzle-orm/pg-core'
+export const users = pgTable('users', {
+  id:                 serial('id').primaryKey(),
+  email:              varchar('email', { length: 255 }).unique().notNull(),
+  password_hash:      text('password_hash').notNull(),
+  full_name:          varchar('full_name', { length: 255 }),
+  avatar_url:         text('avatar_url'),
+  is_verified:        boolean('is_verified').default(false),
+  verification_token: varchar('verification_token', { length: 6 }),
+  token_expiry:       timestamp('token_expiry'),
+  refresh_token:      text('refresh_token'),
+  last_login:         timestamp('last_login'),
+  created_at:         timestamp('created_at').defaultNow(),
+  updated_at:         timestamp('updated_at').defaultNow(),
+})
 
-/**
- * @typedef {Object} Project
- * @property {number} id
- * @property {string} name
- * @property {string|null} description
- * @property {string|null} color_hex
- * @property {Date} created_at
- */
-
-/**
- * @typedef {Object} DashboardCard
- * @property {number} id
- * @property {number|null} card_id
- * @property {number} user_id
- * @property {string} name
- * @property {string|null} icon
- * @property {string|null} color_hex
- * @property {Date} created_at
- */
-
-/**
- * @typedef {Object} Task
- * @property {number} id
- * @property {number} project_id
- * @property {string|null} content
- * @property {'todo'|'doing'|'done'} status
- * @property {Date|null} due_date
- */
-
-/**
- * @typedef {Object} PomodoroSession
- * @property {number} id
- * @property {number} project_id
- * @property {number} duration_minutes
- * @property {Date} created_at
- */
-
-/**
- * @typedef {Object} Resource
- * @property {number} id
- * @property {number} project_id
- * @property {string|null} file_extension
- * @property {string|null} mime_type
- * @property {string|null} url
- * @property {number|null} file_size_kb
- * @property {Date} created_at
- */
+export const projects = pgTable('projects', {
+  id:          serial('id').primaryKey(),
+  name:        varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  color_hex:   varchar('color_hex', { length: 7 }),
+  created_at:  timestamp('created_at').defaultNow(),
+})
+export const dashboard_cards = pgTable('dashboard_cards', {
+  id:        serial('id').primaryKey(),
+  card_id:   integer('card_id'),
+  user_id:   integer('user_id').notNull().references(() => users.id),
+  name:      varchar('name', { length: 255 }).notNull(),
+  icon:      varchar('icon', { length: 100 }),
+  color_hex: varchar('color_hex', { length: 7 }),
+  created_at: timestamp('created_at').defaultNow(),
+})
+export const tasks = pgTable('tasks', {
+  id:         serial('id').primaryKey(),
+  project_id: integer('project_id').notNull().references(() => projects.id),
+  content:    text('content'),
+  status:     varchar('status', { length: 10 }).default('todo'),
+  due_date:   timestamp('due_date'),
+})
+export const pomodoro_sessions = pgTable('pomodoro_sessions', {
+  id:               serial('id').primaryKey(),
+  project_id:       integer('project_id').notNull().references(() => projects.id),
+  duration_minutes: integer('duration_minutes').default(25),
+  created_at:       timestamp('created_at').defaultNow(),
+})
+export const resources = pgTable('resources', {
+  id:             serial('id').primaryKey(),
+  project_id:     integer('project_id').notNull().references(() => projects.id),
+  file_extension: varchar('file_extension', { length: 20 }),
+  mime_type:      varchar('mime_type', { length: 100 }),
+  url:            text('url'),
+  file_size_kb:   integer('file_size_kb'),
+  created_at:     timestamp('created_at').defaultNow(),
+})
