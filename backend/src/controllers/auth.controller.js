@@ -15,7 +15,7 @@ export const register = async (req, res) => {
   try {
     const { email, password, full_name } = req.body
 
-    // Validate input
+    
     if (!email || !password || !full_name) {
       return res.status(400).json({ error: 'email, password and full_name are required' })
     }

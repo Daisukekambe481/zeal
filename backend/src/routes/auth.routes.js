@@ -1,12 +1,3 @@
-/**
- * Auth routes.
- * POST /api/auth/register       → register
- * POST /api/auth/verify-email   → verifyEmail
- * POST /api/auth/login          → login
- * POST /api/auth/refresh        → refresh
- * POST /api/auth/forgot-password → forgotPassword
- * POST /api/auth/reset-password  → resetPassword
- */
 
 import { Router } from 'express'
 import {
