@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zeal — Auth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="auth.css"/>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="grid"></div>
+
+<div class="page">
+  <div class="perspective-container">
+    <div class="card" id="mainCard">
+
+      <!-- SUCCESS OVERLAY -->
+      <div class="success-overlay" id="successOverlay" style="display:none;">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+        <div class="success-label" id="successLabel">Done!</div>
+      </div>
+
+      <!-- LOGO -->
+      <div class="logo">
+        <div class="logo-hex"></div>
+        <span class="logo-text">ZEAL</span>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="form-container active" id="loginPanel">
+        <div class="panel-title">Welcome back</div>
+        <div class="panel-sub">Sign in to your workspace.</div>
+        <div class="alert" id="loginAlert"></div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••"/>
+        </div>
+        <div class="forgot-row">
+          <a onclick="flip('forgot')">Forgot password?</a>
+        </div>
+        <button class="btn" id="loginBtn" onclick="handleLogin()">SIGN IN</button>
+        <div class="link-row">
+          No account? <a onclick="flip('signup')">Create one</a>
+        </div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div class="form-container" id="signupPanel">
+        <div class="panel-title">Create account</div>
+        <div class="panel-sub">Join Zeal — self-hosted, zero subscriptions.</div>
+        <div class="alert" id="signupAlert"></div>
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="signupName" placeholder="Your name"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signupPassword" placeholder="Min 8 characters"/>
+        </div>
+        <button class="btn" id="signupBtn" onclick="handleSignup()">CREATE ACCOUNT</button>
+        <div class="link-row">
+          Already have an account? <a onclick="flip('login')">Sign in</a>
+        </div>
+      </div>
+
+      <!-- VERIFY EMAIL -->
+      <div class="form-container" id="verifyPanel">
+        <div class="panel-title">Verify email</div>
+        <div class="panel-sub">We sent a 6-digit code to <strong id="verifyEmailDisplay"></strong></div>
+        <div class="alert" id="verifyAlert"></div>
+        <div class="field">
+          <label>Verification Code</label>
+          <input class="otp-input" type="text" id="verifyOtp" placeholder="000000" maxlength="6" inputmode="numeric"/>
+        </div>
+        <button class="btn" id="verifyBtn" onclick="handleVerify()">VERIFY EMAIL</button>
+        <div class="link-row">
+          Didn't get it? <a onclick="resendVerify()">Resend code</a>
+        </div>
+      </div>
+
+      <!-- FORGOT PASSWORD -->
+      <div class="form-container" id="forgotPanel">
+        <div class="panel-title">Reset password</div>
+        <div class="panel-sub">Enter your email and we'll send a reset code.</div>
+        <div class="alert" id="forgotAlert"></div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="forgotEmail" placeholder="you@example.com"/>
+        </div>
+        <button class="btn" id="forgotBtn" onclick="handleForgot()">SEND RESET CODE</button>
+        <div class="link-row">
+          <a onclick="flip('login')">← Back to sign in</a>
+        </div>
+      </div>
+
+      <!-- RESET PASSWORD -->
+      <div class="form-container" id="resetPanel">
+        <div class="panel-title">New password</div>
+        <div class="panel-sub">Enter the reset code and choose a new password.</div>
+        <div class="alert" id="resetAlert"></div>
+        <div class="field">
+          <label>Reset Code</label>
+          <input class="otp-input" type="text" id="resetOtp" placeholder="000000" maxlength="6" inputmode="numeric"/>
+        </div>
+        <div class="field">
+          <label>New Password</label>
+          <input type="password" id="resetPassword" placeholder="Min 8 characters"/>
+        </div>
+        <button class="btn" id="resetBtn" onclick="handleReset()">RESET PASSWORD</button>
+        <div class="link-row">
+          <a onclick="flip('login')">← Back to sign in</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+</body>
+</html>
