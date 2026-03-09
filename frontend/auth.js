@@ -1,0 +1,195 @@
+const API = '/api/auth'
+let pendingEmail = ''
+
+const panels = {
+  login:  document.getElementById('loginPanel'),
+  signup: document.getElementById('signupPanel'),
+  verify: document.getElementById('verifyPanel'),
+  forgot: document.getElementById('forgotPanel'),
+  reset:  document.getElementById('resetPanel'),
+}
+
+// ── FLIP ──
+function flip(target) {
+  const card = document.getElementById('mainCard')
+  card.classList.add('flipping')
+  setTimeout(() => {
+    Object.values(panels).forEach(p => p.classList.remove('active'))
+    if (panels[target]) panels[target].classList.add('active')
+  }, 375)
+  setTimeout(() => card.classList.remove('flipping'), 750)
+}
+
+// ── SUCCESS OVERLAY ──
+function showSuccess(label, nextPanel, delay = 2200) {
+  const overlay = document.getElementById('successOverlay')
+  document.getElementById('successLabel').textContent = label
+  overlay.style.display = 'flex'
+  setTimeout(() => {
+    overlay.style.display = 'none'
+    flip(nextPanel)
+  }, delay)
+}
+
+// ── ALERT ──
+function setAlert(id, msg, type = 'err') {
+  const el = document.getElementById(id)
+  el.textContent = msg
+  el.className = `alert ${type} show`
+}
+function clearAlert(id) {
+  document.getElementById(id).className = 'alert'
+}
+
+// ── LOADING ──
+function setLoading(id, on) {
+  const btn = document.getElementById(id)
+  btn.disabled = on
+  btn.classList.toggle('loading', on)
+}
+
+// ── LOGIN ──
+async function handleLogin() {
+  clearAlert('loginAlert')
+  const email    = document.getElementById('loginEmail').value.trim()
+  const password = document.getElementById('loginPassword').value
+  if (!email || !password) return setAlert('loginAlert', 'Please fill in all fields.')
+  setLoading('loginBtn', true)
+  try {
+    const res  = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    const data = await res.json()
+    if (res.ok) {
+      localStorage.setItem('zeal_access_token', data.accessToken)
+      localStorage.setItem('zeal_refresh_token', data.refreshToken)
+      showSuccess('Welcome back!', 'login')
+      setTimeout(() => window.location.href = '/dashboard.html', 2200)
+    } else {
+      setAlert('loginAlert', data.error || 'Invalid credentials.')
+    }
+  } catch { setAlert('loginAlert', 'Cannot reach server.') }
+  finally { setLoading('loginBtn', false) }
+}
+
+// ── SIGNUP ──
+async function handleSignup() {
+  clearAlert('signupAlert')
+  const full_name = document.getElementById('signupName').value.trim()
+  const email     = document.getElementById('signupEmail').value.trim()
+  const password  = document.getElementById('signupPassword').value
+  if (!full_name || !email || !password) return setAlert('signupAlert', 'Please fill in all fields.')
+  if (password.length < 8) return setAlert('signupAlert', 'Password must be at least 8 characters.')
+  setLoading('signupBtn', true)
+  try {
+    const res  = await fetch(`${API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name, email, password })
+    })
+    const data = await res.json()
+    if (res.ok) {
+      pendingEmail = email
+      document.getElementById('verifyEmailDisplay').textContent = email
+      flip('verify')
+    } else {
+      setAlert('signupAlert', data.error || 'Registration failed.')
+    }
+  } catch { setAlert('signupAlert', 'Cannot reach server.') }
+  finally { setLoading('signupBtn', false) }
+}
+
+// ── VERIFY EMAIL ──
+async function handleVerify() {
+  clearAlert('verifyAlert')
+  const otp = document.getElementById('verifyOtp').value.trim()
+  if (otp.length !== 6) return setAlert('verifyAlert', 'Enter the 6-digit code from your email.')
+  setLoading('verifyBtn', true)
+  try {
+    const res  = await fetch(`${API}/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail, otp })
+    })
+    const data = await res.json()
+    if (res.ok) {
+      showSuccess('Email verified!', 'login')
+    } else {
+      setAlert('verifyAlert', data.error || 'Invalid code.')
+    }
+  } catch { setAlert('verifyAlert', 'Cannot reach server.') }
+  finally { setLoading('verifyBtn', false) }
+}
+
+// ── RESEND VERIFY ──
+async function resendVerify() {
+  try {
+    await fetch(`${API}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail })
+    })
+    setAlert('verifyAlert', 'New code sent — check your inbox.', 'ok')
+  } catch { setAlert('verifyAlert', 'Failed to resend.') }
+}
+
+// ── FORGOT PASSWORD ──
+async function handleForgot() {
+  clearAlert('forgotAlert')
+  const email = document.getElementById('forgotEmail').value.trim()
+  if (!email) return setAlert('forgotAlert', 'Enter your email address.')
+  setLoading('forgotBtn', true)
+  try {
+    const res = await fetch(`${API}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    if (res.ok) {
+      pendingEmail = email
+      flip('reset')
+    } else {
+      setAlert('forgotAlert', 'Something went wrong.')
+    }
+  } catch { setAlert('forgotAlert', 'Cannot reach server.') }
+  finally { setLoading('forgotBtn', false) }
+}
+
+// ── RESET PASSWORD ──
+async function handleReset() {
+  clearAlert('resetAlert')
+  const otp         = document.getElementById('resetOtp').value.trim()
+  const newPassword = document.getElementById('resetPassword').value
+  if (otp.length !== 6) return setAlert('resetAlert', 'Enter the 6-digit reset code.')
+  if (newPassword.length < 8) return setAlert('resetAlert', 'Password must be at least 8 characters.')
+  setLoading('resetBtn', true)
+  try {
+    const res  = await fetch(`${API}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail, otp, newPassword })
+    })
+    const data = await res.json()
+    if (res.ok) {
+      showSuccess('Password reset!', 'login')
+    } else {
+      setAlert('resetAlert', data.error || 'Reset failed.')
+    }
+  } catch { setAlert('resetAlert', 'Cannot reach server.') }
+  finally { setLoading('resetBtn', false) }
+}
+
+// ── ENTER KEY ──
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return
+  const active = document.querySelector('.form-container.active')
+  if (!active) return
+  const id = active.id
+  if (id === 'loginPanel')  handleLogin()
+  if (id === 'signupPanel') handleSignup()
+  if (id === 'verifyPanel') handleVerify()
+  if (id === 'forgotPanel') handleForgot()
+  if (id === 'resetPanel')  handleReset()
+})
