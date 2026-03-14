@@ -1,4 +1,4 @@
-import { passwordStrength } from '../middleware/passwordStrength.js'
+import { passwordStrength } from '../middleware/securitypwsd.js'
 import { Router } from 'express'
 import { authMiddleware } from '../middleware/authmiddleware.js'
 import {
