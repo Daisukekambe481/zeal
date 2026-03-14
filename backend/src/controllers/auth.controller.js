@@ -33,13 +33,14 @@ export const register = async (req, res) => {
     const otp = generateOTP()
     const token_expiry = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
-    // Insert user
-    const [user] = await db.insert(users).values({
+
+      const [user] = await db.insert(users).values({
       email,
       password_hash,
       full_name,
       verification_token: otp,
       token_expiry,
+      otp_attempts: 0,
       is_verified: false,
     }).returning()
 
@@ -80,10 +81,21 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ error: 'Email already verified' })
     }
 
-    if (user.verification_token !== otp) {
-      return res.status(400).json({ error: 'Invalid OTP' })
+   if (user.otp_attempts >= 3) {
+      return res.status(429).json({
+        error: 'Too many incorrect attempts. Please request a new verification code.'
+      })
     }
 
+    if (user.verification_token !== otp) {
+      await db.update(users)
+        .set({ otp_attempts: (user.otp_attempts || 0) + 1 })
+        .where(eq(users.email, email))
+      const remaining = 2 - (user.otp_attempts || 0)
+      return res.status(400).json({
+        error: `Invalid OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
+      })
+    }
     if (new Date() > new Date(user.token_expiry)) {
       return res.status(400).json({ error: 'OTP expired' })
     }
