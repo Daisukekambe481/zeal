@@ -94,37 +94,49 @@
 
       <!-- FORGOT PASSWORD -->
       <div class="form-container" id="forgotPanel">
-        <div class="panel-title">Reset password</div>
-        <div class="panel-sub">Enter your email and we'll send a reset code.</div>
-        <div class="alert" id="forgotAlert"></div>
-        <div class="field">
-          <label>Email</label>
-          <input type="email" id="forgotEmail" placeholder="you@example.com"/>
-        </div>
-        <button class="btn" id="forgotBtn" onclick="handleForgot()">SEND RESET CODE</button>
-        <div class="link-row">
-          <a onclick="flip('login')">← Back to sign in</a>
-        </div>
-      </div>
+  <div class="panel-title">Reset password</div>
+  <div class="panel-sub">Enter your email and we'll send a reset code.</div>
+  <div class="alert" id="forgotAlert"></div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="forgotEmail" placeholder="you@example.com"/>
+  </div>
+  <button class="btn" id="forgotBtn" onclick="handleForgot()">SEND RESET CODE</button>
+  <div class="link-row">
+    <a onclick="flip('login')">← Back to sign in</a>
+  </div>
+</div>
 
       <!-- RESET PASSWORD -->
-      <div class="form-container" id="resetPanel">
-        <div class="panel-title">New password</div>
-        <div class="panel-sub">Enter the reset code and choose a new password.</div>
-        <div class="alert" id="resetAlert"></div>
-        <div class="field">
-          <label>Reset Code</label>
-          <input class="otp-input" type="text" id="resetOtp" placeholder="000000" maxlength="6" inputmode="numeric"/>
-        </div>
-        <div class="field">
-          <label>New Password</label>
-          <input type="password" id="resetPassword" placeholder="Min 8 characters"/>
-        </div>
-        <button class="btn" id="resetBtn" onclick="handleReset()">RESET PASSWORD</button>
-        <div class="link-row">
-          <a onclick="flip('login')">← Back to sign in</a>
-        </div>
-      </div>
+      <!-- RESET OTP -->
+      <div class="form-container" id="resetOtpPanel">
+  <div class="panel-title">Enter reset code</div>
+  <div class="panel-sub">Check your inbox for the 6-digit code.</div>
+  <div class="alert" id="resetOtpAlert"></div>
+  <div class="field">
+    <label>Reset Code</label>
+    <input class="otp-input" type="text" id="resetOtp" placeholder="000000" maxlength="6" inputmode="numeric"/>
+  </div>
+  <button class="btn" id="resetOtpBtn" onclick="handleResetOtp()">VERIFY CODE</button>
+  <div class="link-row">
+    <a onclick="flip('forgot')">← Resend code</a>
+  </div>
+</div>
+
+      <!-- RESET NEW PASSWORD -->
+      <div class="form-container" id="resetPassPanel">
+  <div class="panel-title">New password</div>
+  <div class="panel-sub">Choose a strong new password.</div>
+  <div class="alert" id="resetPassAlert"></div>
+  <div class="field">
+    <label>New Password</label>
+    <input type="password" id="resetPassword" placeholder="Min 10 characters"/>
+  </div>
+  <button class="btn" id="resetPassBtn" onclick="handleReset()">RESET PASSWORD</button>
+  <div class="link-row">
+    <a onclick="flip('login')">← Back to sign in</a>
+  </div>
+</div>
 
     </div>
   </div>
