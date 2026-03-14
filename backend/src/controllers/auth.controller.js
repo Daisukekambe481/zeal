@@ -100,9 +100,8 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ error: 'OTP expired' })
     }
 
-    // Mark as verified
-    await db.update(users)
-      .set({ is_verified: true, verification_token: null, token_expiry: null })
+       await db.update(users)
+      .set({ is_verified: true, verification_token: null, token_expiry: null, otp_attempts: 0 })
       .where(eq(users.email, email))
 
     res.status(200).json({ message: 'Email verified successfully' })
@@ -233,10 +232,9 @@ export const forgotPassword = async (req, res) => {
     const otp = generateOTP()
     const token_expiry = new Date(Date.now() + 10 * 60 * 1000)
 
-    await db.update(users)
-      .set({ verification_token: otp, token_expiry })
+   await db.update(users)
+      .set({ verification_token: otp, token_expiry, otp_attempts: 0 })
       .where(eq(users.email, email))
-
     await sendOTPEmail(email, otp, 'reset')
 
     res.status(200).json({ message: 'If that email exists, an OTP has been sent.' })
