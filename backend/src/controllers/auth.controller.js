@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 import { generateOTP, sendOTPEmail } from '../services/email.service.js'
 
 /**
- * Register a new user & send OTP
+ * Register a new user & send OTp
  * @param {import('express').Request} req 
  * @param {import('express').Response} res
  */
