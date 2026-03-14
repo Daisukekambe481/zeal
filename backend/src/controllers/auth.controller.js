@@ -6,35 +6,28 @@ import { eq } from 'drizzle-orm'
 import { generateOTP, sendOTPEmail } from '../services/email.service.js'
 
 /**
- * Register a new user and send OTP verification email.
- * @param {import('express').Request} req - body: { email, password, full_name }
+ * Register a new user & send OTP
+ * @param {import('express').Request} req 
  * @param {import('express').Response} res
- * @returns {Promise<void>}
  */
 export const register = async (req, res) => {
   try {
     const { email, password, full_name } = req.body
 
-    
     if (!email || !password || !full_name) {
       return res.status(400).json({ error: 'email, password and full_name are required' })
     }
 
-    // Check email not taken
     const existing = await db.select().from(users).where(eq(users.email, email))
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Email already registered' })
     }
 
-    // Hash password
     const password_hash = await bcrypt.hash(password, 10)
-
-    // Generate OTP
     const otp = generateOTP()
-    const token_expiry = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    const token_expiry = new Date(Date.now() + 10 * 60 * 1000)
 
-
-      const [user] = await db.insert(users).values({
+    const [user] = await db.insert(users).values({
       email,
       password_hash,
       full_name,
@@ -44,7 +37,6 @@ export const register = async (req, res) => {
       is_verified: false,
     }).returning()
 
-    // Send OTP email
     await sendOTPEmail(email, otp, 'verify')
 
     res.status(201).json({
@@ -59,9 +51,8 @@ export const register = async (req, res) => {
 
 /**
  * Verify email using OTP code.
- * @param {import('express').Request} req - body: { email, otp }
+ * @param {import('express').Request} req
  * @param {import('express').Response} res
- * @returns {Promise<void>}
  */
 export const verifyEmail = async (req, res) => {
   try {
@@ -73,15 +64,10 @@ export const verifyEmail = async (req, res) => {
 
     const [user] = await db.select().from(users).where(eq(users.email, email))
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' })
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' })
+    if (user.is_verified) return res.status(400).json({ error: 'Email already verified' })
 
-    if (user.is_verified) {
-      return res.status(400).json({ error: 'Email already verified' })
-    }
-
-   if (user.otp_attempts >= 3) {
+    if (user.otp_attempts >= 3) {
       return res.status(429).json({
         error: 'Too many incorrect attempts. Please request a new verification code.'
       })
@@ -96,11 +82,12 @@ export const verifyEmail = async (req, res) => {
         error: `Invalid OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
       })
     }
+
     if (new Date() > new Date(user.token_expiry)) {
       return res.status(400).json({ error: 'OTP expired' })
     }
 
-       await db.update(users)
+    await db.update(users)
       .set({ is_verified: true, verification_token: null, token_expiry: null, otp_attempts: 0 })
       .where(eq(users.email, email))
 
@@ -113,9 +100,8 @@ export const verifyEmail = async (req, res) => {
 
 /**
  * Log in a verified user and return JWT tokens.
- * @param {import('express').Request} req - body: { email, password }
+ * @param {import('express').Request} req
  * @param {import('express').Response} res
- * @returns {Promise<void>}
  */
 export const login = async (req, res) => {
   try {
@@ -127,21 +113,15 @@ export const login = async (req, res) => {
 
     const [user] = await db.select().from(users).where(eq(users.email, email))
 
-    // Same message for not found and wrong password
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' })
-    }
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' })
 
     if (!user.is_verified) {
       return res.status(403).json({ error: 'Please verify your email before logging in' })
     }
 
     const valid = await bcrypt.compare(password, user.password_hash)
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' })
-    }
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' })
 
-    // Sign tokens
     const accessToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -154,7 +134,6 @@ export const login = async (req, res) => {
       { expiresIn: '7d' }
     )
 
-    // Save refresh token + update last_login
     await db.update(users)
       .set({ refresh_token: refreshToken, last_login: new Date() })
       .where(eq(users.id, user.id))
@@ -167,10 +146,9 @@ export const login = async (req, res) => {
 }
 
 /**
- * Issue a new access token from a valid refresh token.
- * @param {import('express').Request} req - body: { refreshToken }
+ * Issue a new access token
+ * @param {import('express').Request} req
  * @param {import('express').Response} res
- * @returns {Promise<void>}
  */
 export const refresh = async (req, res) => {
   try {
@@ -180,7 +158,6 @@ export const refresh = async (req, res) => {
       return res.status(400).json({ error: 'refreshToken is required' })
     }
 
-    // Verify token signature
     let decoded
     try {
       decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
@@ -188,13 +165,11 @@ export const refresh = async (req, res) => {
       return res.status(403).json({ error: 'Invalid or expired refresh token' })
     }
 
-    // Check token exists in DB
     const [user] = await db.select().from(users).where(eq(users.id, decoded.id))
     if (!user || user.refresh_token !== refreshToken) {
       return res.status(403).json({ error: 'Refresh token revoked' })
     }
 
-    // Issue new access token
     const accessToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -210,21 +185,17 @@ export const refresh = async (req, res) => {
 
 /**
  * Send OTP to email for password reset.
- * @param {import('express').Request} req - body: { email }
+ * @param {import('express').Request} req
  * @param {import('express').Response} res
- * @returns {Promise<void>}
  */
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body
 
-    if (!email) {
-      return res.status(400).json({ error: 'email is required' })
-    }
+    if (!email) return res.status(400).json({ error: 'email is required' })
 
     const [user] = await db.select().from(users).where(eq(users.email, email))
 
-    // Always return 200 — never reveal if email exists
     if (!user) {
       return res.status(200).json({ message: 'If that email exists, an OTP has been sent.' })
     }
@@ -232,9 +203,10 @@ export const forgotPassword = async (req, res) => {
     const otp = generateOTP()
     const token_expiry = new Date(Date.now() + 10 * 60 * 1000)
 
-   await db.update(users)
+    await db.update(users)
       .set({ verification_token: otp, token_expiry, otp_attempts: 0 })
       .where(eq(users.email, email))
+
     await sendOTPEmail(email, otp, 'reset')
 
     res.status(200).json({ message: 'If that email exists, an OTP has been sent.' })
@@ -245,10 +217,56 @@ export const forgotPassword = async (req, res) => {
 }
 
 /**
- * Reset password using OTP code.
- * @param {import('express').Request} req - body: { email, otp, newPassword }
+ * Verify reset OTP
+ * @param {import('express').Request} req 
  * @param {import('express').Response} res
- * @returns {Promise<void>}
+ */
+export const verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'email and otp are required' })
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.email, email))
+    if (!user) return res.status(404).json({ error: 'User not found' })
+
+    if (user.otp_attempts >= 3) {
+      return res.status(429).json({
+        error: 'Too many incorrect attempts. Please request a new reset code.'
+      })
+    }
+
+    if (user.verification_token !== otp) {
+      await db.update(users)
+        .set({ otp_attempts: (user.otp_attempts || 0) + 1 })
+        .where(eq(users.email, email))
+      const remaining = 2 - (user.otp_attempts || 0)
+      return res.status(400).json({
+        error: `Invalid OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`
+      })
+    }
+
+    if (new Date() > new Date(user.token_expiry)) {
+      return res.status(400).json({ error: 'OTP expired. Please request a new one.' })
+    }
+
+    await db.update(users)
+      .set({ otp_attempts: 0 })
+      .where(eq(users.email, email))
+
+    res.status(200).json({ message: 'OTP verified. You may now reset your password.' })
+  } catch (error) {
+    console.error('verifyResetOtp error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+/**
+ * Reset password using OTP code.
+ * @param {import('express').Request} req -
+ * @param {import('express').Response} res
  */
 export const resetPassword = async (req, res) => {
   try {
@@ -259,10 +277,7 @@ export const resetPassword = async (req, res) => {
     }
 
     const [user] = await db.select().from(users).where(eq(users.email, email))
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' })
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' })
 
     if (user.verification_token !== otp) {
       return res.status(400).json({ error: 'Invalid OTP' })
@@ -275,12 +290,40 @@ export const resetPassword = async (req, res) => {
     const password_hash = await bcrypt.hash(newPassword, 10)
 
     await db.update(users)
-      .set({ password_hash, verification_token: null, token_expiry: null })
+      .set({ password_hash, verification_token: null, token_expiry: null, otp_attempts: 0 })
       .where(eq(users.email, email))
 
     res.status(200).json({ message: 'Password reset successful' })
   } catch (error) {
     console.error('resetPassword error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+/**
+ * Logout
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+export const logout = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const token  = req.headers.authorization?.split(' ')[1]
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId))
+
+    const blacklist = user.blacklisted_tokens || []
+    if (token && !blacklist.includes(token)) {
+      blacklist.push(token)
+    }
+
+    await db.update(users)
+      .set({ refresh_token: null, blacklisted_tokens: blacklist })
+      .where(eq(users.id, userId))
+
+    res.status(200).json({ message: 'Logged out successfully' })
+  } catch (error) {
+    console.error('logout error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }

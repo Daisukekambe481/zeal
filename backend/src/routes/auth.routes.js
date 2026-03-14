@@ -6,6 +6,7 @@ import {
   verifyEmail,
   login,
   refresh,
+  verifyResetOtp,
   forgotPassword,
   resetPassword,
   logout,
@@ -23,5 +24,6 @@ router.post('/login',loginLimiter,login)
 router.post('/refresh',refresh)
 router.post('/forgot-password',otpLimiter,forgotPassword)
 router.post('/reset-password',  otpLimiter,passwordStrength,resetPassword)
+router.post('/verify-reset-otp', otpLimiter, verifyResetOtp)
 router.post('/logout', authMiddleware, logout)
 export default router
