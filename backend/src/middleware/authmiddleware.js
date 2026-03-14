@@ -1,6 +1,6 @@
 /**
- * Validates JWT from Authorization header and attaches decoded user to req.user.
- * Apply to all routes except /api/auth/*.
+  * @param {import('express').Request} req
+ * @param {import('express').Response} res
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  * @param {import('express').NextFunction} next
@@ -37,11 +37,33 @@
      }
    }
  
-   // 3. If no auth found, return 401
    return res.status(401).json({ 
      success: false, 
      message: "Unauthorized: Please log in to access this resource" 
    });
  };
  
- export default isAuthenticated;
+export default isAuthenticated; 
+export const logout = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const token  = req.headers.authorization?.split(' ')[1]
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId))
+
+    // Add current access token to blacklist
+    const blacklist = user.blacklisted_tokens || []
+    if (token && !blacklist.includes(token)) {
+      blacklist.push(token)
+    }
+
+    await db.update(users)
+      .set({ refresh_token: null, blacklisted_tokens: blacklist })
+      .where(eq(users.id, userId))
+
+    res.status(200).json({ message: 'Logged out successfully' })
+  } catch (error) {
+    console.error('logout error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

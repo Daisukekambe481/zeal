@@ -1,5 +1,6 @@
 import { passwordStrength } from '../middleware/passwordStrength.js'
 import { Router } from 'express'
+import { authMiddleware } from '../middleware/authmiddleware.js'
 import {
   register,
   verifyEmail,
@@ -7,6 +8,7 @@ import {
   refresh,
   forgotPassword,
   resetPassword,
+  logout,
 } from '../controllers/auth.controller.js'
 import {
   loginLimiter,
@@ -21,5 +23,5 @@ router.post('/login',loginLimiter,login)
 router.post('/refresh',refresh)
 router.post('/forgot-password',otpLimiter,forgotPassword)
 router.post('/reset-password',  otpLimiter,passwordStrength,resetPassword)
-
+router.post('/logout', authMiddleware, logout)
 export default router
