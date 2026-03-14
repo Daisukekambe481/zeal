@@ -2,11 +2,12 @@ const API = '/api/auth'
 let pendingEmail = ''
 
 const panels = {
-  login:  document.getElementById('loginPanel'),
-  signup: document.getElementById('signupPanel'),
-  verify: document.getElementById('verifyPanel'),
-  forgot: document.getElementById('forgotPanel'),
-  reset:  document.getElementById('resetPanel'),
+  login:      document.getElementById('loginPanel'),
+  signup:     document.getElementById('signupPanel'),
+  verify:     document.getElementById('verifyPanel'),
+  forgot:     document.getElementById('forgotPanel'),
+  resetOtp:   document.getElementById('resetOtpPanel'),
+  resetPass:  document.getElementById('resetPassPanel'),
 }
 
 // ── FLIP ──
@@ -81,7 +82,7 @@ async function handleSignup() {
   const email     = document.getElementById('signupEmail').value.trim()
   const password  = document.getElementById('signupPassword').value
   if (!full_name || !email || !password) return setAlert('signupAlert', 'Please fill in all fields.')
-  if (password.length < 8) return setAlert('signupAlert', 'Password must be at least 8 characters.')
+  if (password.length < 10) return setAlert('signupAlert', 'Password must be at least 10 characters.')
   setLoading('signupBtn', true)
   try {
     const res  = await fetch(`${API}/register`, {
@@ -149,7 +150,7 @@ async function handleForgot() {
     })
     if (res.ok) {
       pendingEmail = email
-      flip('reset')
+      flip('resetOtp')
     } else {
       setAlert('forgotAlert', 'Something went wrong.')
     }
@@ -157,28 +158,48 @@ async function handleForgot() {
   finally { setLoading('forgotBtn', false) }
 }
 
+// ── VERIFY RESET OTP ──
+async function handleResetOtp() {
+  clearAlert('resetOtpAlert')
+  const otp = document.getElementById('resetOtp').value.trim()
+  if (otp.length !== 6) return setAlert('resetOtpAlert', 'Enter the 6-digit reset code.')
+  setLoading('resetOtpBtn', true)
+  try {
+    const res  = await fetch(`${API}/verify-reset-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail, otp })
+    })
+    const data = await res.json()
+    if (res.ok) {
+      flip('resetPass')
+    } else {
+      setAlert('resetOtpAlert', data.error || 'Invalid code.')
+    }
+  } catch { setAlert('resetOtpAlert', 'Cannot reach server.') }
+  finally { setLoading('resetOtpBtn', false) }
+}
+
 // ── RESET PASSWORD ──
 async function handleReset() {
-  clearAlert('resetAlert')
-  const otp         = document.getElementById('resetOtp').value.trim()
+  clearAlert('resetPassAlert')
   const newPassword = document.getElementById('resetPassword').value
-  if (otp.length !== 6) return setAlert('resetAlert', 'Enter the 6-digit reset code.')
-  if (newPassword.length < 8) return setAlert('resetAlert', 'Password must be at least 8 characters.')
-  setLoading('resetBtn', true)
+  if (newPassword.length < 10) return setAlert('resetPassAlert', 'Password must be at least 10 characters.')
+  setLoading('resetPassBtn', true)
   try {
     const res  = await fetch(`${API}/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: pendingEmail, otp, newPassword })
+      body: JSON.stringify({ email: pendingEmail, otp: document.getElementById('resetOtp').value.trim(), newPassword })
     })
     const data = await res.json()
     if (res.ok) {
       showSuccess('Password reset!', 'login')
     } else {
-      setAlert('resetAlert', data.error || 'Reset failed.')
+      setAlert('resetPassAlert', data.error || 'Reset failed.')
     }
-  } catch { setAlert('resetAlert', 'Cannot reach server.') }
-  finally { setLoading('resetBtn', false) }
+  } catch { setAlert('resetPassAlert', 'Cannot reach server.') }
+  finally { setLoading('resetPassBtn', false) }
 }
 
 // ── ENTER KEY ──
@@ -187,9 +208,10 @@ document.addEventListener('keydown', e => {
   const active = document.querySelector('.form-container.active')
   if (!active) return
   const id = active.id
-  if (id === 'loginPanel')  handleLogin()
-  if (id === 'signupPanel') handleSignup()
-  if (id === 'verifyPanel') handleVerify()
-  if (id === 'forgotPanel') handleForgot()
-  if (id === 'resetPanel')  handleReset()
+  if (id === 'loginPanel')     handleLogin()
+  if (id === 'signupPanel')    handleSignup()
+  if (id === 'verifyPanel')    handleVerify()
+  if (id === 'forgotPanel')    handleForgot()
+  if (id === 'resetOtpPanel')  handleResetOtp()
+  if (id === 'resetPassPanel') handleReset()
 })
