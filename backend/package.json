@@ -16,7 +16,8 @@
     "express-rate-limit": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^8.0.1",
-    "pg": "^8.11.5"
+    "pg": "^8.11.5",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "drizzle-kit": "^0.21.4"
