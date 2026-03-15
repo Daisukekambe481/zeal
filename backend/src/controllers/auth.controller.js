@@ -37,7 +37,10 @@ export const register = async (req, res) => {
       is_verified: false,
     }).returning()
 
-    await sendOTPEmail(email, otp, 'verify')
+   // Send email in background — don't block the response
+    sendOTPEmail(email, otp, 'verify').catch(err => {
+      console.error('Email send failed:', err.message)
+    })
 
     res.status(201).json({
       message: 'Registration successful. Check your email for the verification code.',
@@ -207,7 +210,9 @@ export const forgotPassword = async (req, res) => {
       .set({ verification_token: otp, token_expiry, otp_attempts: 0 })
       .where(eq(users.email, email))
 
-    await sendOTPEmail(email, otp, 'reset')
+   sendOTPEmail(email, otp, 'reset').catch(err => {
+      console.error('Email send failed:', err.message)
+    })
 
     res.status(200).json({ message: 'If that email exists, an OTP has been sent.' })
   } catch (error) {
