@@ -1,4 +1,9 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── RESET & BASE ── */
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
 :root {
   --bg:           #06080d;
@@ -81,9 +86,7 @@ html, body {
     inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
-.card.flipping {
-  transform: rotateY(360deg);
-}
+.card.flipping { transform: rotateY(360deg); }
 
 /* ── LOGO ── */
 .logo {
@@ -176,7 +179,12 @@ html, body {
 .panel-sub strong { color: var(--accent); }
 
 /* ── FIELDS ── */
-.field { margin-bottom: 12px; }
+.field { 
+  margin-bottom: 12px; 
+  position: relative; /* CRITICAL: Anchor for absolute button */
+  display: flex;
+  flex-direction: column;
+}
 .field label {
   display: block;
   font-size: 11px;
@@ -212,7 +220,46 @@ html, body {
   font-weight: 700 !important;
 }
 
-/* ── BUTTON ── */
+/* ── PASSWORD EYE BUTTON ── */
+.field.password-field input {
+  padding-right: 44px !important; /* Space for the icon */
+}
+
+.eye-btn {
+  position: absolute; /* Takes button out of flex flow */
+  right: 12px;
+  bottom: 11px; /* Positions inside the input area, below label */
+  
+  /* Reset button defaults strictly */
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: color 0.2s ease;
+}
+
+.eye-btn:hover {
+  color: var(--accent) !important;
+}
+
+.eye-btn svg {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+/* ── ACTION BUTTONS ── */
 .btn {
   width: 100%;
   padding: 13px;
@@ -236,7 +283,6 @@ html, body {
 }
 .btn:active  { transform: scale(0.98); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn.loading  { pointer-events: none; }
 .btn.loading::after {
   content: '';
   position: absolute;
@@ -250,51 +296,20 @@ html, body {
 }
 @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
 
-/* ── LINKS ── */
+/* ── LINKS & ALERTS ── */
 .link-row {
   margin-top: 16px;
   text-align: center;
   font-size: 13px;
   color: var(--muted);
 }
-.link-row a {
-  color: var(--accent);
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 500;
-}
+.link-row a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 500; }
 .link-row a:hover { text-decoration: underline; }
 
-.forgot-row {
-  text-align: right;
-  margin-bottom: 10px;
-  margin-top: -4px;
-}
-.forgot-row a {
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.2s;
-}
+.forgot-row { text-align: right; margin-bottom: 10px; margin-top: -4px; }
+.forgot-row a { font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: none; transition: color 0.2s; }
 .forgot-row a:hover { color: var(--accent); }
-.eye-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 11px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted);
-  padding: 0;
-  width: auto;
-  box-shadow: none;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  z-index: 2;
-}
-/* ── ALERT ── */
+
 .alert {
   padding: 10px 13px;
   border-radius: 8px;
@@ -306,19 +321,5 @@ html, body {
   line-height: 1.4;
 }
 .alert.show { display: flex; }
-.alert.err {
-  background: rgba(255,77,106,0.1);
-  border: 1px solid rgba(255,77,106,0.2);
-  color: var(--error);
-}
-.alert.ok {
-  background: rgba(0,229,192,0.08);
-  border: 1px solid rgba(0,229,192,0.2);
-  color: var(--accent);
-}
-.field.password-field {
-  position: relative;
-}
-.field.password-field input {
-  padding-right: 42px;
-}
+.alert.err { background: rgba(255,77,106,0.1); border: 1px solid rgba(255,77,106,0.2); color: var(--error); }
+.alert.ok { background: rgba(0,229,192,0.08); border: 1px solid rgba(0,229,192,0.2); color: var(--accent); }
