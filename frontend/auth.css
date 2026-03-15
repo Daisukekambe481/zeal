@@ -278,7 +278,22 @@ html, body {
   transition: color 0.2s;
 }
 .forgot-row a:hover { color: var(--accent); }
-
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0;
+  width: auto;
+  box-shadow: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
 /* ── ALERT ── */
 .alert {
   padding: 10px 13px;
@@ -300,4 +315,10 @@ html, body {
   background: rgba(0,229,192,0.08);
   border: 1px solid rgba(0,229,192,0.2);
   color: var(--accent);
+}
+.field.password-field {
+  position: relative;
+}
+.field.password-field input {
+  padding-right: 42px;
 }
